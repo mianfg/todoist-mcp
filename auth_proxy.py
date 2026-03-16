@@ -48,17 +48,10 @@ def _pkce_verify(verifier: str, challenge: str, method: str) -> bool:
     return computed == challenge
 
 
-@app.get("/authorize")
-async def oauth_authorize(
-    response_type: str = "",
-    client_id: str = "",
-    redirect_uri: str = "",
-    state: str = "",
-    code_challenge: str = "",
-    code_challenge_method: str = "S256",
-    scope: str = "",
+def _oauth_authorize_impl(
+    response_type: str, client_id: str, redirect_uri: str, state: str,
+    code_challenge: str, code_challenge_method: str, scope: str,
 ):
-    """OAuth 2.0 authorize - immediate redirect with code for Claude.ai flow."""
     if response_type != "code" or not client_id or not redirect_uri or not state or not code_challenge:
         return Response(content='{"error":"invalid_request","error_description":"Missing required params"}', status_code=400)
     code = secrets.token_urlsafe(32)
@@ -74,21 +67,12 @@ async def oauth_authorize(
     return RedirectResponse(url=f"{redirect_uri}?{urlencode(params)}", status_code=302)
 
 
-@app.post("/token")
-async def oauth_token(
-    grant_type: str = Form(""),
-    code: str = Form(""),
-    redirect_uri: str = Form(""),
-    client_id: str = Form(""),
-    client_secret: str = Form(""),
-    code_verifier: str = Form(""),
+def _oauth_token_impl(
+    grant_type: str, code: str, redirect_uri: str, client_id: str,
+    client_secret: str, code_verifier: str,
 ):
-    """OAuth 2.0 token endpoint - exchange code for access token."""
     if grant_type != "authorization_code" or not code or not client_id or not client_secret or not code_verifier:
-        return Response(
-            content='{"error":"invalid_request","error_description":"Missing required params"}',
-            status_code=400,
-        )
+        return Response(content='{"error":"invalid_request","error_description":"Missing required params"}', status_code=400)
     if client_secret != MCP_ACCESS_TOKEN:
         return Response(content='{"error":"invalid_client","error_description":"Invalid client_secret"}', status_code=401)
     info = _auth_codes.pop(code, None)
@@ -102,6 +86,72 @@ async def oauth_token(
         content=f'{{"access_token":"{MCP_ACCESS_TOKEN}","token_type":"Bearer","scope":"claudeai"}}',
         media_type="application/json",
     )
+
+
+@app.get("/todoist-extended/authorize")
+async def oauth_authorize_todoist(
+    response_type: str = "", client_id: str = "", redirect_uri: str = "",
+    state: str = "", code_challenge: str = "", code_challenge_method: str = "S256",
+    scope: str = "",
+):
+    return _oauth_authorize_impl(response_type, client_id, redirect_uri, state, code_challenge, code_challenge_method, scope)
+
+
+@app.post("/todoist-extended/token")
+async def oauth_token_todoist(
+    grant_type: str = Form(""),
+    code: str = Form(""),
+    redirect_uri: str = Form(""),
+    client_id: str = Form(""),
+    client_secret: str = Form(""),
+    code_verifier: str = Form(""),
+):
+    return _oauth_token_impl(grant_type, code, redirect_uri, client_id, client_secret, code_verifier)
+
+
+@app.get("/todoist-extended/.well-known/oauth-authorization-server")
+async def oauth_discovery_todoist(request: Request):
+    """OAuth 2.0 Authorization Server Metadata - under /todoist-extended for NPM path-only proxy."""
+    base = str(request.base_url).rstrip("/")
+    return {
+        "issuer": base,
+        "authorization_endpoint": f"{base}/todoist-extended/authorize",
+        "token_endpoint": f"{base}/todoist-extended/token",
+        "response_types_supported": ["code"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["claudeai"],
+    }
+
+
+# Root-level OAuth (when full domain is proxied)
+@app.get("/authorize")
+async def oauth_authorize(
+    response_type: str = "", client_id: str = "", redirect_uri: str = "",
+    state: str = "", code_challenge: str = "", code_challenge_method: str = "S256",
+    scope: str = "",
+):
+    return _oauth_authorize_impl(response_type, client_id, redirect_uri, state, code_challenge, code_challenge_method, scope)
+
+
+@app.post("/token")
+async def oauth_token(
+    grant_type: str = Form(""), code: str = Form(""), redirect_uri: str = Form(""),
+    client_id: str = Form(""), client_secret: str = Form(""), code_verifier: str = Form(""),
+):
+    return _oauth_token_impl(grant_type, code, redirect_uri, client_id, client_secret, code_verifier)
+
+
+@app.get("/.well-known/oauth-authorization-server")
+async def oauth_discovery(request: Request):
+    base = str(request.base_url).rstrip("/")
+    return {
+        "issuer": base,
+        "authorization_endpoint": f"{base}/authorize",
+        "token_endpoint": f"{base}/token",
+        "response_types_supported": ["code"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["claudeai"],
+    }
 
 
 def _mcp_path(path: str) -> str:

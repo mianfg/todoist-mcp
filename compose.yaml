@@ -1,0 +1,10 @@
+services:
+  todoist-mcp:
+    build: .
+    container_name: todoist-mcp
+    restart: unless-stopped
+    ports:
+      - 3099:3000
+    environment:
+      - TODOIST_API_TOKEN=${TODOIST_API_TOKEN}
+      - MCP_ACCESS_TOKEN=${MCP_ACCESS_TOKEN}

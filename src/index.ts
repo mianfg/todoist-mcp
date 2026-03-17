@@ -61,6 +61,8 @@ if (USE_UNIFIED_TOOLS) {
 } else {
   console.error("Using legacy tools (60+ individual tools)");
 }
+const extendedInList = TOOLS.some((t) => t.name === "todoist_create_project");
+console.error(`[Startup] todoist_create_project in tool list: ${extendedInList}`);
 
 // List available tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -71,6 +73,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const { name, arguments: args } = request.params;
+
+    console.error(`[CallTool] name="${name}" args keys=${args ? Object.keys(args as object).join(",") : "null"}`);
 
     if (!args) {
       throw new Error("No arguments provided");

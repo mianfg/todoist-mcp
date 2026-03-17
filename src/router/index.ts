@@ -55,6 +55,7 @@ export async function routeToolCall(
 
   // If neither router handled it, throw an error
   if (result === null) {
+    console.error(`[Router] Unknown tool: "${toolName}" (useUnified=${useUnified})`);
     throw new Error(`Unknown tool: ${toolName}`);
   }
 

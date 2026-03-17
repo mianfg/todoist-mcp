@@ -1,6 +1,7 @@
 """Auth proxy in front of MCP. Accepts Bearer token or Basic auth (password = token).
 Also implements OAuth 2.0 Authorization Code + PKCE for Claude.ai remote MCP flow."""
 import base64
+import logging
 import hashlib
 import os
 import secrets
@@ -17,6 +18,9 @@ UPSTREAM = os.environ.get("MCP_UPSTREAM", "http://127.0.0.1:3001").rstrip("/")
 if not MCP_ACCESS_TOKEN:
     raise ValueError("MCP_ACCESS_TOKEN must be set")
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
 # In-memory store for OAuth auth codes
@@ -24,20 +28,24 @@ _auth_codes: dict[str, dict] = {}
 _CODE_TTL = 300  # 5 minutes
 
 
-def _check_auth(request: Request) -> bool:
+def _check_auth(request: Request) -> tuple[bool, str]:
+    """Returns (ok, failure_reason). Reason is safe to log (no token value)."""
     auth = request.headers.get("Authorization")
     if not auth:
-        return False
+        return False, "no Authorization header"
     if auth.startswith("Bearer "):
-        return auth[7:].strip() == MCP_ACCESS_TOKEN
+        token = auth[7:].strip()
+        ok = token == MCP_ACCESS_TOKEN
+        return ok, "" if ok else "Bearer token mismatch"
     if auth.startswith("Basic "):
         try:
             decoded = base64.b64decode(auth[6:].strip()).decode("utf-8", errors="strict")
             _, password = decoded.split(":", 1)
-            return password == MCP_ACCESS_TOKEN
-        except Exception:
-            return False
-    return False
+            ok = password == MCP_ACCESS_TOKEN
+            return ok, "" if ok else "Basic auth password mismatch"
+        except Exception as e:
+            return False, f"Basic auth decode failed: {e}"
+    return False, "unsupported Authorization scheme (expected Bearer or Basic)"
 
 
 def _pkce_verify(verifier: str, challenge: str, method: str) -> bool:
@@ -163,7 +171,14 @@ def _mcp_path(path: str) -> str:
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy(path: str, request: Request):
-    if not _check_auth(request):
+    ok, reason = _check_auth(request)
+    if not ok:
+        logger.warning(
+            "Auth failed: %s | path=%s method=%s",
+            reason,
+            path,
+            request.method,
+        )
         return Response(content='{"error":"Unauthorized"}', status_code=401)
 
     upstream_path = _mcp_path(path)

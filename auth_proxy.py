@@ -172,7 +172,8 @@ async def proxy(path: str, request: Request):
     headers.pop("host", None)
     body = await request.body()
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    # 3 min timeout for slow Todoist API calls (e.g. bulk create_project during migration)
+    async with httpx.AsyncClient(timeout=180.0) as client:
         try:
             r = await client.request(
                 request.method,

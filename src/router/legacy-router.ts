@@ -221,30 +221,36 @@ export async function handleLegacyToolCall(
 ): Promise<string | null> {
   switch (toolName) {
     case "todoist_task_create":
+    case "todoist_create_task":
       if (!isCreateTaskArgs(args)) {
         throw new Error("Invalid arguments for todoist_task_create");
       }
       return await handleCreateTask(client, args);
 
     case "todoist_task_get":
+    case "todoist_get_tasks":
       if (!isGetTasksArgs(args)) {
         throw new Error("Invalid arguments for todoist_task_get");
       }
       return await handleGetTasks(client, args);
 
     case "todoist_task_update":
+    case "todoist_update_task":
+    case "todoist_update_task_labels":
       if (!isUpdateTaskArgs(args)) {
         throw new Error("Invalid arguments for todoist_task_update");
       }
       return await handleUpdateTask(client, args);
 
     case "todoist_task_delete":
+    case "todoist_delete_task":
       if (!isDeleteTaskArgs(args)) {
         throw new Error("Invalid arguments for todoist_task_delete");
       }
       return await handleDeleteTask(client, args);
 
     case "todoist_task_complete":
+    case "todoist_complete_task":
       if (!isCompleteTaskArgs(args)) {
         throw new Error("Invalid arguments for todoist_task_complete");
       }
@@ -269,24 +275,28 @@ export async function handleLegacyToolCall(
       return await handleGetCompletedTasks(client, args);
 
     case "todoist_project_get":
+    case "todoist_get_projects":
       if (!isGetProjectsArgs(args)) {
         throw new Error("Invalid arguments for todoist_project_get");
       }
       return await handleGetProjects(client);
 
     case "todoist_section_get":
+    case "todoist_get_project_sections":
       if (!isGetSectionsArgs(args)) {
         throw new Error("Invalid arguments for todoist_section_get");
       }
       return await handleGetSections(client, args);
 
     case "todoist_project_create":
+    case "todoist_create_project":
       if (!isCreateProjectArgs(args)) {
         throw new Error("Invalid arguments for todoist_project_create");
       }
       return await handleCreateProject(client, args);
 
     case "todoist_project_update":
+    case "todoist_update_project":
       if (!isUpdateProjectArgs(args)) {
         throw new Error("Invalid arguments for todoist_project_update");
       }
@@ -313,6 +323,7 @@ export async function handleLegacyToolCall(
       return await handleGetProjectCollaborators(client, args);
 
     case "todoist_section_create":
+    case "todoist_create_project_section":
       if (!isCreateSectionArgs(args)) {
         throw new Error("Invalid arguments for todoist_section_create");
       }
@@ -385,24 +396,29 @@ export async function handleLegacyToolCall(
       return await handleDeleteComment(client, args);
 
     case "todoist_label_get":
+    case "todoist_get_personal_labels":
+    case "todoist_get_personal_label":
       if (!isGetLabelsArgs(args)) {
         throw new Error("Invalid arguments for todoist_label_get");
       }
       return await handleGetLabels(client);
 
     case "todoist_label_create":
+    case "todoist_create_personal_label":
       if (!isCreateLabelArgs(args)) {
         throw new Error("Invalid arguments for todoist_label_create");
       }
       return await handleCreateLabel(client, args);
 
     case "todoist_label_update":
+    case "todoist_update_personal_label":
       if (!isUpdateLabelArgs(args)) {
         throw new Error("Invalid arguments for todoist_label_update");
       }
       return await handleUpdateLabel(client, args);
 
     case "todoist_label_delete":
+    case "todoist_delete_personal_label":
       if (!isLabelNameArgs(args)) {
         throw new Error("Invalid arguments for todoist_label_delete");
       }
@@ -633,15 +649,18 @@ export async function handleLegacyToolCall(
       return await handleGetUserSettings();
 
     case "todoist_shared_labels_get":
+    case "todoist_get_shared_labels":
       return await handleGetSharedLabels();
 
     case "todoist_shared_label_rename":
+    case "todoist_rename_shared_labels":
       if (!isRenameSharedLabelArgs(args)) {
         throw new Error("Invalid arguments for todoist_shared_label_rename");
       }
       return await handleRenameSharedLabel(args);
 
     case "todoist_shared_label_remove":
+    case "todoist_remove_shared_labels":
       if (!isRemoveSharedLabelArgs(args)) {
         throw new Error("Invalid arguments for todoist_shared_label_remove");
       }

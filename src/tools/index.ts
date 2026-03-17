@@ -16,6 +16,7 @@ import { BACKUP_TOOLS } from "./backup-tools.js";
 import { PROJECT_NOTES_TOOLS } from "./project-notes-tools.js";
 import { COLLABORATION_TOOLS } from "./collaboration-tools.js";
 import { TEST_TOOLS } from "./test-tools.js";
+import { EXTENDED_ALIAS_TOOLS } from "./extended-aliases.js";
 
 export { TASK_TOOLS } from "./task-tools.js";
 export { SUBTASK_TOOLS } from "./subtask-tools.js";
@@ -35,6 +36,7 @@ export { BACKUP_TOOLS } from "./backup-tools.js";
 export { PROJECT_NOTES_TOOLS } from "./project-notes-tools.js";
 export { COLLABORATION_TOOLS } from "./collaboration-tools.js";
 export { TEST_TOOLS } from "./test-tools.js";
+export { EXTENDED_ALIAS_TOOLS } from "./extended-aliases.js";
 
 // Export individual tools for backwards compatibility
 export {
@@ -171,6 +173,7 @@ export {
 
 export const ALL_TOOLS = [
   ...TASK_TOOLS,
+  ...EXTENDED_ALIAS_TOOLS,
   ...PROJECT_TOOLS,
   ...COMMENT_TOOLS,
   ...LABEL_TOOLS,

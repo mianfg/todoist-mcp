@@ -15,7 +15,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { TodoistApi } from "@doist/todoist-api-typescript";
 import { createTodoistClient } from "./utils/dry-run-wrapper.js";
-import { ALL_TOOLS } from "./tools/index.js";
+import { ALL_TOOLS, EXTENDED_ALIAS_TOOLS } from "./tools/index.js";
 import { ALL_UNIFIED_TOOLS } from "./tools/unified/index.js";
 import { routeToolCall } from "./router/index.js";
 import { handleError } from "./errors.js";
@@ -49,8 +49,12 @@ const apiClient = todoistClient as TodoistApi;
 // Determine which tool set to use based on environment variable
 // Set TODOIST_UNIFIED_TOOLS=true to use the new consolidated tools (19 tools)
 // Default uses legacy tools (60+ tools) for backward compatibility
+// EXTENDED_ALIAS_TOOLS (todoist_create_project, todoist_get_tasks, etc.) are always included
+// for compatibility with todoist-mcp-server-extended clients
 const USE_UNIFIED_TOOLS = process.env.TODOIST_UNIFIED_TOOLS === "true";
-const TOOLS = USE_UNIFIED_TOOLS ? ALL_UNIFIED_TOOLS : ALL_TOOLS;
+const TOOLS = USE_UNIFIED_TOOLS
+  ? [...ALL_UNIFIED_TOOLS, ...EXTENDED_ALIAS_TOOLS]
+  : ALL_TOOLS;
 
 if (USE_UNIFIED_TOOLS) {
   console.error("Using unified tools (19 consolidated tools)");

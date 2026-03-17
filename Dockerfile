@@ -26,6 +26,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json .
 COPY --from=builder /app/node_modules ./node_modules
 COPY auth_proxy.py .
+COPY run_proxy.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
